@@ -31227,6 +31227,27 @@
               })) : (i(gettext("You must provide a learner name.")), o.reject()), o.promise()
           }
       }, {
+        key: "loadCompletionInfo",
+        value: function(e, t) {
+            var n = this.server.url("get_daterange_completion");
+            return $.Deferred((function(i) {
+                $.ajax({
+                    url: n,
+                    type: "POST",
+                    dataType: "html",
+                    data: _.extend({
+                        'start_date': startDate,
+                        'end_date': endDate,
+                    }, t)
+                }).done((function(e) {
+                    var response = JSON.parse(e)
+                    $("#table-row-done .value").html(response.count)
+                })).fail((function() {
+                    i.rejectWith(this, [gettext("This section could not be loaded.")])
+                }))
+            })).promise()
+        }
+      }, {
           key: "confirmSubmitGradeForTeam",
           value: function() {
               var e = gettext("This grade will be applied to all members of the team. Do you want to continue?");
@@ -31311,7 +31332,9 @@
                   t.preventDefault(), e.rescheduleUnfinishedTasks()
               })), r.find(".staff__grade__show-form").click((function(t) {
                   $(t.currentTarget).closest(".".concat(e.baseView.SLIDABLE_CONTAINER_CLASS)).hasClass(e.baseView.IS_SHOWING_CLASS) ? e.closeStaffGradeForm(!1) : e.loadStaffGradeForm()
-              })))
+              }))), $('#reportrange').on('apply.daterangepicker', function(t) {
+                t.preventDefault(), e.loadCompletionInfo()
+            })
           }
       }, {
           key: "scheduleTraining",
