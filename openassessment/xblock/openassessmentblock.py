@@ -687,6 +687,8 @@ class OpenAssessmentBlock(MessageMixin,
 
         # minified additional_js should be already included in 'make javascript'
         fragment.add_javascript_url(LoadStatic.get_url("openassessment-lms.js"))
+        fragment.add_javascript_url(LoadStatic.get_url("daterangepicker.js"))
+        fragment.add_css_url(LoadStatic.get_url("daterangepicker.css"))
 
         js_context_dict = {
             "ALLOWED_IMAGE_MIME_TYPES": self.ALLOWED_IMAGE_MIME_TYPES,

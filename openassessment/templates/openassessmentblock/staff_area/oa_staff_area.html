@@ -1,5 +1,10 @@
 {% load i18n %}
 {% load tz %}
+<style type="text/css">
+    .daterangepicker{display: none;}
+    #reportrange{background: #fff;cursor: pointer;margin-bottom: 0;padding: 5px 10px;border-radius: 4px;color: black;}
+    #reportrange .caret{display: inline-block;width: 0;height: 0;margin-left: 10px;vertical-align: middle;border-top: 6px dashed;border-right: 6px solid transparent;border-left: 6px solid transparent;margin-top: 9px;float: right;}
+</style>
 <div class="openassessment__staff-area wrapper--staff-area">
 
     <div class="wrapper--staff-toolbar">
@@ -84,14 +89,22 @@
                         <tr>
                             <th abbr="Step" scope="col">{% trans "Problem Step" %}</th>
                             <th abbr="# of Learners" scope="col">{% trans "Active Learners in Step" %}</th>
+                            <th class="date-range"></th>
                         </tr>
                         </thead>
 
                         <tbody>
                         {% for item in status_counts %}
-                            <tr>
+                            <tr id="table-row-{{ item.status }}">
                                 <td class="label">{{ item.status }}</td>
                                 <td class="value">{{ item.count }}</td>
+                                <td class="date-range">
+                                    {% if item.status == "done" %}
+                                        <div id="reportrange" class="reportrange">
+                                            <i class="fa fa-calendar"></i>&nbsp;<span></span> <b class="caret"></b>
+                                        </div>
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -152,3 +165,46 @@
     </div>
     {% endif %}
 </div>
+<script type="text/javascript">
+    var start = moment("2015-01-01");
+    var end = moment();
+
+    var startDate = start.format('DD/MM/YYYY');
+    var endDate = end.format('DD/MM/YYYY');
+
+    function cb(start, end) {
+        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+    }
+
+    $('#reportrange').daterangepicker({
+        startDate: start,
+        endDate: end,
+        dateLimit: {
+            days: 185
+        },
+        ranges: {
+           'All Time': [moment().subtract(1, 'year').startOf('year'), moment()],
+           'Today': [moment(), moment()],
+           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+           'This Month': [moment().startOf('month'), moment().endOf('month')],
+           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+           'This Year': [moment().startOf('year'), moment().endOf('year')],
+           'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+        },
+        locale: {
+            format: 'MMMM D, YYYY'
+        },
+
+    }, cb);
+
+    cb(start, end);
+
+    $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
+        startDate = picker.startDate.format('DD/MM/YYYY');
+        endDate = picker.endDate.format('DD/MM/YYYY');
+    });
+
+    cb(start, end);
+</script>

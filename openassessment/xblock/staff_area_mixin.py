@@ -5,6 +5,8 @@ determine the flow of the problem.
 import copy
 import logging
 from functools import wraps
+from datetime import datetime
+import datetime as default_datetime
 from webob import Response
 
 from django.conf import settings
@@ -14,6 +16,7 @@ from submissions.errors import SubmissionNotFoundError
 from openassessment.assessment.errors import PeerAssessmentInternalError
 from openassessment.fileupload.api import delete_shared_files_for_team, remove_file
 from openassessment.workflow.errors import AssessmentWorkflowError, AssessmentWorkflowInternalError
+from openassessment.workflow.models import AssessmentWorkflow
 from openassessment.xblock.data_conversion import create_submission_dict
 from openassessment.xblock.resolve_dates import DISTANT_FUTURE, DISTANT_PAST
 
@@ -97,6 +100,32 @@ class StaffAreaMixin:
         """
         path, context = self.get_staff_path_and_context()
         return self.render_assessment(path, context)
+
+    @XBlock.handler
+    @require_course_staff("STUDENT_INFO")
+    def get_daterange_completion(self, data, suffix=""):
+        start = data.params.get("start_date")
+        end = data.params.get("end_date")
+        student_item = self.get_student_item_dict()
+        try:
+            start_date = datetime.strptime(start, "%d/%m/%Y").date()
+            end_date = datetime.strptime(end, "%d/%m/%Y").date()
+            submission = AssessmentWorkflow.objects.filter(
+                course_id=student_item['course_id'],
+                item_id=student_item['item_id'], 
+                status="done", 
+                status_changed__range=(
+                    default_datetime.datetime.combine(
+                        start_date, default_datetime.time.min
+                    ),
+                    default_datetime.datetime.combine(
+                        end_date, default_datetime.time.max
+                    ),
+                )
+            )
+            return Response(json_body={"count": submission.count()})
+        except Exception as e:
+            return Response(json_body={"count": 0})
 
     def get_staff_path_and_context(self):
         """
